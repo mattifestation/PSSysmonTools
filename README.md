@@ -6,6 +6,8 @@ Sysmon Tools for PowerShell
 Parses a Sysmon driver configuration from the registry. Output is nearly identical to that of "sysmon.exe -c" but without the requirement to run sysmon.exe.
 ### ConvertFrom-SysmonBinaryConfiguration
 Parses a binary Sysmon configuration. ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function for Get-SysmonConfiguration.
+### Test-SysmonConfiguration
+Validates a Sysmon configuration.
 
 Please refer to built-in help for each function for more information.
 
