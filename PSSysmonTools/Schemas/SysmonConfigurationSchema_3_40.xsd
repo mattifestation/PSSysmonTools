@@ -1,0 +1,651 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema targetNamespace="urn:schemas-specterops.io:SysmonConfiguration"
+    elementFormDefault="qualified"
+    xmlns="urn:schemas-specterops.io:SysmonConfiguration"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+>
+  <xs:simpleType name="IncludeExcludeType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported onmatch attribute values.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="include"/>
+      <xs:enumeration value="exclude"/>
+    </xs:restriction>
+  </xs:simpleType>
+  
+  <xs:simpleType name="ConditionOptionType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported condition attribute values.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="is"/>
+      <xs:enumeration value="is not"/>
+      <xs:enumeration value="contains"/>
+      <xs:enumeration value="excludes"/>
+      <xs:enumeration value="begin with"/>
+      <xs:enumeration value="end with"/>
+      <xs:enumeration value="less than"/>
+      <xs:enumeration value="more than"/>
+      <xs:enumeration value="image"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="ConditionOptionIsIsNotType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported condition attribute values in the case where it only makes sense to support "is" and "is not".
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="is"/>
+      <xs:enumeration value="is not"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="IntegrityLevelType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported process integrity levels.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="AppContainer"/>
+      <xs:enumeration value="Low"/>
+      <xs:enumeration value="Medium"/>
+      <xs:enumeration value="High"/>
+      <xs:enumeration value="System"/>
+      <xs:enumeration value="Protected Process"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="WMIEventType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported WMI events.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="WmiFilterEvent"/>
+      <xs:enumeration value="WmiConsumerEvent"/>
+      <xs:enumeration value="WmiBindingEvent"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="WMIOperationType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported WMI operations.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Deletion"/>
+      <xs:enumeration value="Deleted"/>
+      <xs:enumeration value="Creation"/>
+      <xs:enumeration value="Created"/>
+      <xs:enumeration value="Modification"/>
+      <xs:enumeration value="Modified"/>
+      <xs:enumeration value="Unknown"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="SignatureStatusType">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported digital signature validation results.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Valid"/>
+      <xs:enumeration value="Expired"/>
+      <xs:enumeration value="Revoked"/>
+      <xs:enumeration value="Unavailable"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="GuidString">
+    <xs:annotation>
+      <xs:documentation>
+        Represents a well-formatted GUID.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="\{[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}\}"/>
+      <xs:whiteSpace value="collapse"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="HexString">
+    <xs:annotation>
+      <xs:documentation>
+        Represents a well-formatted hexadecimal string. Note that the hex digits must be upper case.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="0x[0-9A-F]+"/>
+      <xs:whiteSpace value="collapse"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="HashAlgorithmList">
+    <xs:annotation>
+      <xs:documentation>
+        Represents the set of supported hash algorithms.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <!-- Note that this will allow duplicates in the comma-separate list. e.g. "sha1,sha-1,md5" -->
+      <!-- I don't believe XSD pattern regexes are expressive enough to account for unique values. This is better than nothing though. -->
+      <xs:pattern value="(\*|all)|((sha1|sha-1|md5|md-5|sha256|sha-256|imphash|imp-hash)(,(sha1|sha-1|md5|md-5|sha256|sha-256|imphash|imp-hash))*)"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="MajorMinorVersionString">
+    <xs:annotation>
+      <xs:documentation>
+        Represents a well-formatted major.minor version number where both number can be represented with up to two digits.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[0-9]{1,2}[.][0-9]{1,2}"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:complexType name="GenericStringRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where there are no constraints on the value.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="condition" default="is" type="ConditionOptionType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="GuidRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be a GUID.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="GuidString">
+        <xs:attribute name="condition" default="is" type="ConditionOptionIsIsNotType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="HexRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be a hexadecimal value.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="HexString">
+        <xs:attribute name="condition" default="is" type="ConditionOptionType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="IntegrityLevelRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be a specific process integrity level.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="IntegrityLevelType">
+        <xs:attribute name="condition" default="is" type="ConditionOptionIsIsNotType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  
+  <xs:complexType name="WMIOperationRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be a specific WMI operation.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="WMIOperationType">
+        <xs:attribute name="condition" default="is" type="ConditionOptionIsIsNotType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="WMIEventRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be a specific WMI event.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="WMIEventType">
+        <xs:attribute name="condition" default="is" type="ConditionOptionIsIsNotType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="BooleanRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be either "true" or "false".
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:boolean">
+        <xs:attribute name="condition" default="is" type="ConditionOptionIsIsNotType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="DWORDRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be an unsigned integer.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:unsignedInt">
+        <xs:attribute name="condition" default="is" type="ConditionOptionType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="WORDRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be an unsigned short.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="xs:unsignedShort">
+        <xs:attribute name="condition" default="is" type="ConditionOptionType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="SignatureStatusRule">
+    <xs:annotation>
+      <xs:documentation>
+        This type is applied to a Sysmon rule element where the value is expected to be a specific signature validation status.
+      </xs:documentation>
+    </xs:annotation>
+    <xs:simpleContent>
+      <xs:extension base="SignatureStatusType">
+        <xs:attribute name="condition" default="is" type="ConditionOptionIsIsNotType" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:element name="Sysmon">
+    <xs:annotation>
+      <xs:documentation>
+        Sysmon 3.4[0] schema
+      </xs:documentation>
+    </xs:annotation>
+    <xs:complexType>
+      <!-- There must be exactly one Sysmon element. "Sysmon" serves as the "root" element in the schema. -->
+      <xs:all>
+        <xs:element name="EventFiltering" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              Specifies a set of events to trigger on.
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType>
+            <xs:sequence>
+              <!-- All of the following elements are optional but can occur no more than 2 times: -->
+              <!-- one with an "include" and one with an "exclude" OnMatch attribute value. -->
+              <xs:element name="ProcessCreate" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 1
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"            type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"        type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"          type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"              type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="CommandLine"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="CurrentDirectory"   type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="User"               type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="LogonGuid"          type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="LogonId"            type="HexRule"            minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TerminalSessionId"  type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="IntegrityLevel"     type="IntegrityLevelRule" minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Hashes"             type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ParentProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ParentProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ParentImage"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ParentCommandLine"  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="FileCreateTime" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 2
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"                  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"              type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"                type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"                    type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetFilename"           type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="CreationUtcTime"          type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="PreviousCreationUtcTime"  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="NetworkConnect" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 3
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"              type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"          type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"            type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"                type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="User"                 type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Protocol"             type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Initiated"            type="BooleanRule"        minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceIsIpv6"         type="BooleanRule"        minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceIp"             type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceHostname"       type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourcePort"           type="WORDRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourcePortName"       type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="DestinationIsIpv6"    type="BooleanRule"        minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="DestinationIp"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="DestinationHostname"  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="DestinationPort"      type="WORDRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="DestinationPortName"  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="ProcessTerminate" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 5
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"      type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="DriverLoad" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 6
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"          type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ImageLoaded"      type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Hashes"           type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Signed"           type="BooleanRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Signature"        type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SignatureStatus"  type="SignatureStatusRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="ImageLoad" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 7
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"          type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"      type="GuidRule"             minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"        type="DWORDRule"            minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"            type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ImageLoaded"      type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Hashes"           type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Signed"           type="BooleanRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Signature"        type="GenericStringRule"    minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SignatureStatus"  type="SignatureStatusRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="CreateRemoteThread" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 8
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"            type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceImage"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetImage"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="NewThreadId"        type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="StartAddress"       type="HexRule"            minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="StartModule"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="StartFunction"      type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="RawAccessRead" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 9
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"      type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Device"       type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="ProcessAccess" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 10
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"            type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceProcessGUID"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceThreadId"     type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="SourceImage"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetProcessGUID"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetImage"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="GrantedAccess"      type="HexRule"            minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="CallTrace"          type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="FileCreate" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 11
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"          type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"      type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"        type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"            type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetFilename"   type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="CreationUtcTime"  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="RegistryEvent" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 12, 13, 14
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="EventType"    type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="UtcTime"      type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetObject" type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <!-- Due to a broken sysmon DTD schema, the following elements should be supported but are not: -->
+                    <!-- SetValue: Details -->
+                    <!-- DeleteKey: NewName -->
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="FileCreateStreamHash" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 15
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"          type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"      type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"        type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"            type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="TargetFilename"   type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="CreationUtcTime"  type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Hash"             type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="PipeEvent" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 17, 18
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="UtcTime"      type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessGuid"  type="GuidRule"           minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="ProcessId"    type="DWORDRule"          minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="PipeName"     type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Image"        type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="WmiEvent" minOccurs="0" maxOccurs="2">
+                <xs:annotation>
+                  <xs:documentation>
+                    Event ID: 19, 20, 21
+                  </xs:documentation>
+                </xs:annotation>
+                <xs:complexType>
+                  <xs:sequence minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="EventType"  type="WMIEventRule"       minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="UtcTime"    type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="Operation"  type="WMIOperationRule"   minOccurs="0" maxOccurs="unbounded"/>
+                    <xs:element name="User"       type="GenericStringRule"  minOccurs="0" maxOccurs="unbounded"/>
+                    <!-- Due to a broken sysmon DTD schema, the following elements should be supported but are not: -->
+                    <!-- WMI filter-related: EventNamespace, Name, Query -->
+                    <!-- WMI consumer-related: Name, Type, Destination -->
+                    <!-- WMI filtertoconsumerbinding-related: Consumer, Filter -->
+                  </xs:sequence>
+                  <xs:attribute name="onmatch" type="IncludeExcludeType" use="required"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <!-- HashAlgorithms is a comma-delimited list of supported hashes. -->
+        <!-- Since XSD has no way to distinguish a comma-separated list, there is no additional validation that can be performed to constrain the supported hashes. -->
+        <!-- A space-delimited list would be ideal for better hash algorithm validation. -->
+        <xs:element name="HashAlgorithms" type="HashAlgorithmList" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              Specifies the hashes that will be calculated upon an event firing.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <xs:element name="DriverName" type="xs:Name" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              Specifies the name of the Sysmon driver to be used upon installation of the Sysmon service. This is an alternative to the sysmon.exe "-d" switch.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <!-- ProcessAccessConfig doesn't appear to be actually used. Leaving in here to conform with 3.40 DTD schema. -->
+        <xs:element name="ProcessAccessConfig" type="xs:string" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              The purpose of ProcessAccessConfig is unknown now that ProcessAccess event rules are supported. Perhaps this offers legacy schema support.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <!-- PipeMonitoringConfig doesn't appear to be actually used. Leaving in here to conform with 3.40 DTD schema. -->
+        <xs:element name="PipeMonitoringConfig" type="xs:string" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              The purpose of PipeMonitoringConfig is unknown now that PipeEvent event rules are supported. Perhaps this offers legacy schema support.
+            </xs:documentation>
+          </xs:annotation>
+        </xs:element>
+        <!-- CheckRevocation is an empty element. -->
+        <xs:element name="CheckRevocation" minOccurs="0" maxOccurs="1">
+          <xs:annotation>
+            <xs:documentation>
+              CheckRevocation is an empty element where when present, indicates that certificate revocation checking should be performed. This is an alternative to the sysmon.exe "-r" switch.
+            </xs:documentation>
+          </xs:annotation>
+          <xs:complexType />
+        </xs:element>
+      </xs:all>
+      <xs:attribute name="schemaversion" type="MajorMinorVersionString" use="required">
+        <xs:annotation>
+          <xs:documentation>
+            Specifies the sysmon schema version number.
+          </xs:documentation>
+        </xs:annotation>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  
+</xs:schema>
