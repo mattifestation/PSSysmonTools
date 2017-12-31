@@ -1,7 +1,7 @@
 @{
 RootModule = 'PSSysmonTools.psm1'
 
-ModuleVersion = '0.1.0.0'
+ModuleVersion = '0.2.0.0'
 
 GUID = '0f91cb8e-56b8-44c2-821c-bab1ad7c369a'
 
@@ -17,7 +17,8 @@ PowerShellVersion = '3.0'
 FunctionsToExport = @(
     'Get-SysmonConfiguration',
     'ConvertFrom-SysmonBinaryConfiguration',
-    'Test-SysmonConfiguration'
+    'Test-SysmonConfiguration',
+    'ConvertTo-SysmonXMLConfiguration'
 )
 
 PrivateData = @{
@@ -30,6 +31,12 @@ PrivateData = @{
         ProjectUri = 'https://github.com/mattifestation/PSSysmonTools'
 
         ReleaseNotes = @'
+0.2.0
+-----
+Enhancements:
+* Added ConvertTo-SysmonXMLConfiguration
+* Test-SysmonConfiguration now supports input from the pipeline.
+
 0.1.0
 -----
 Enhancements:

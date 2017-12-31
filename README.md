@@ -8,6 +8,8 @@ Parses a Sysmon driver configuration from the registry. Output is nearly identic
 Parses a binary Sysmon configuration. ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function for Get-SysmonConfiguration.
 ### Test-SysmonConfiguration
 Validates a Sysmon configuration.
+### ConvertTo-SysmonXMLConfiguration
+Recovers a Sysmon XML configuration from a binary configuration.
 
 Please refer to built-in help for each function for more information.
 
