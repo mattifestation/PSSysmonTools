@@ -1,4 +1,4 @@
-function Test-SysmonConfiguration {
+filter Test-SysmonConfiguration {
 <#
 .SYNOPSIS
 
@@ -32,8 +32,9 @@ Outputs an object consisting of the results of the schema validation.
 
     [CmdletBinding()]
     param (
-        [Parameter(Mandatory = $True)]
+        [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
         [String]
+        [Alias('FullName')]
         [ValidateNotNullOrEmpty()]
         $Path
     )
@@ -41,6 +42,8 @@ Outputs an object consisting of the results of the schema validation.
     $FullPath = Resolve-Path $Path
 
     $FileContents = Get-Content -Path $FullPath
+
+    Write-Verbose "Attempting to parse the following file: $FullPath"
 
     if ($FileContents) {
         try {
