@@ -18,7 +18,8 @@ FunctionsToExport = @(
     'Get-SysmonConfiguration',
     'ConvertFrom-SysmonBinaryConfiguration',
     'Test-SysmonConfiguration',
-    'ConvertTo-SysmonXMLConfiguration'
+    'ConvertTo-SysmonXMLConfiguration',
+    'Merge-SysmonXMLConfiguration'
 )
 
 PrivateData = @{
@@ -36,6 +37,7 @@ PrivateData = @{
 Enhancements:
 * Added ConvertTo-SysmonXMLConfiguration
 * Test-SysmonConfiguration now supports input from the pipeline.
+* Added Merge-SysmonXMLConfiguration
 
 0.1.0
 -----

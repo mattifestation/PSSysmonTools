@@ -839,8 +839,7 @@ Outputs a Sysmon XML configuration document.
 
         $XmlSerializer.Serialize($XmlWriter, $Sysmon, $EmptyNamespaces)
     } catch {
-        throw $_
-        return
+        Write-Error $_
     } finally {
         if ($XmlWriter) { $XmlWriter.Close() }
     }

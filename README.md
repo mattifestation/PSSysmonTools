@@ -10,6 +10,8 @@ Parses a binary Sysmon configuration. ConvertFrom-SysmonBinaryConfiguration is d
 Validates a Sysmon configuration.
 ### ConvertTo-SysmonXMLConfiguration
 Recovers a Sysmon XML configuration from a binary configuration.
+### Merge-SysmonXMLConfiguration
+Merges one or more Sysmon XML configurations.
 
 Please refer to built-in help for each function for more information.
 
