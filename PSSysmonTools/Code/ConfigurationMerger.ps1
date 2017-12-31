@@ -1,4 +1,4 @@
-﻿function Merge-SysmonXMLConfiguration {
+function Merge-SysmonXMLConfiguration {
 <#
 .SYNOPSIS
 
@@ -21,6 +21,10 @@ Specifies a Sysmon XML configuration into which all other policies will be merge
 .PARAMETER PolicyToMergePath
 
 Specifies one or more Sysmon XML configurations to merge into the reference policy.
+
+.PARAMETER ExcludeMergeComments
+
+Specifies that merge comments should be excluded from the resulting XML.
 
 .EXAMPLE
 
