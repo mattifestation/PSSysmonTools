@@ -1,7 +1,7 @@
 @{
 RootModule = 'PSSysmonTools.psm1'
 
-ModuleVersion = '0.2.0.0'
+ModuleVersion = '0.2.1.0'
 
 GUID = '0f91cb8e-56b8-44c2-821c-bab1ad7c369a'
 
@@ -32,6 +32,11 @@ PrivateData = @{
         ProjectUri = 'https://github.com/mattifestation/PSSysmonTools'
 
         ReleaseNotes = @'
+0.2.1
+-----
+Enhancements:
+* Updated to support Sysmon v7 and schema version 4.0
+
 0.2.0
 -----
 Enhancements:

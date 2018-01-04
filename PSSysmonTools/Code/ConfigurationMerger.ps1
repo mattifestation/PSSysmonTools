@@ -88,23 +88,25 @@ Outputs a String consisting of the merged policy.
         # Compile the parsing code
         Add-Type -TypeDefinition $SchemaSource -ReferencedAssemblies 'System.Xml' -ErrorAction Stop
 
+        $NamespaceName = "Sysmon_$($ReferencePolicyValidationResult.SchemaVersion.Replace('.', '_'))"
+
         # This will be used to deserialize all of the XML configs and to serialize the merged config.
-        $XmlSerializer = New-Object -TypeName Xml.Serialization.XmlSerializer -ArgumentList ([Sysmon]), ''
+        $XmlSerializer = New-Object -TypeName Xml.Serialization.XmlSerializer -ArgumentList ("$NamespaceName.Sysmon" -as [Type]), ''
 
         $XMLReader = New-Object -TypeName Xml.XmlTextReader -ArgumentList $ReferencePolicyFullPath
 
-        [Sysmon] $ReferenceSysmon = $XmlSerializer.Deserialize($XMLReader)
+        $ReferenceSysmon = $XmlSerializer.Deserialize($XMLReader) -as "$NamespaceName.Sysmon"
 
         $XMLReader.Close()
 
         # Collect each property name implemented by the SysmonEventFiltering type - e.g. ProcessCreate, RegistryEvent, etc.
-        $EventFilteringProperties = [SysmonEventFiltering].GetProperties().Name
+        $EventFilteringProperties = ("$NamespaceName.SysmonEventFiltering" -as [Type]).GetProperties().Name
 
         # Sysmon objects will be deserialized for each XML policy.
-        $SysmonList = New-Object -TypeName "Collections.ObjectModel.Collection``1[Sysmon]"
+        $SysmonList = New-Object -TypeName "Collections.ObjectModel.Collection``1[$NamespaceName.Sysmon]"
 
         # It's possible that there is no EnvetFiltering instance in the reference policy - e.g. if merging with a blank policy.
-        if ($null -eq $ReferenceSysmon.EventFiltering) { $ReferenceSysmon.EventFiltering = New-Object -TypeName SysmonEventFiltering }
+        if ($null -eq $ReferenceSysmon.EventFiltering) { $ReferenceSysmon.EventFiltering = New-Object -TypeName "$NamespaceName.SysmonEventFiltering" }
 
         $SysmonList.Add($ReferenceSysmon)
 
@@ -132,7 +134,7 @@ Outputs a String consisting of the merged policy.
             if ($ValidationResult.Validated) {
                 $XMLReader = New-Object -TypeName Xml.XmlTextReader -ArgumentList $PolicyFullPath
 
-                $SysmonList.Add(([Sysmon] $XmlSerializer.Deserialize($XMLReader)))
+                $SysmonList.Add(($XmlSerializer.Deserialize($XMLReader) -as "$NamespaceName.Sysmon"))
 
                 $XMLReader.Close()
             }
@@ -148,7 +150,7 @@ Outputs a String consisting of the merged policy.
             $EventGrouping = $SysmonList.EventFiltering."$EventFilteringProperty" | Group-Object -Property onmatch
 
             # Collect each property name implemented by each respective event type - e.g. UtcTime, Image, TargetObject, etc.
-            $RulePropertyNames = ("SysmonEventFiltering$EventFilteringProperty" -as [Type]).GetProperties().Name |
+            $RulePropertyNames = ("$NamespaceName.SysmonEventFiltering$EventFilteringProperty" -as [Type]).GetProperties().Name |
                 Where-Object { $_ -ne 'onmatch' }
 
             $Events = foreach ($Event in $EventGrouping) {
@@ -160,7 +162,7 @@ Outputs a String consisting of the merged policy.
 
                 # e.g. create a new instance of a ProcessCreate object.
                 # This is where we will add the collected rules
-                $EventInstance = New-Object -TypeName "SysmonEventFiltering$EventFilteringProperty"
+                $EventInstance = New-Object -TypeName "$NamespaceName.SysmonEventFiltering$EventFilteringProperty"
                 $EventInstance.onmatch = $OnMatchVal
 
                 foreach ($RulePropertyName in $RulePropertyNames) {
@@ -186,7 +188,7 @@ Outputs a String consisting of the merged policy.
             }
 
             # Ensure the event groups are typed properly.
-            $Events = $Events -as "SysmonEventFiltering$EventFilteringProperty[]"
+            $Events = $Events -as "$NamespaceName.SysmonEventFiltering$EventFilteringProperty[]"
             
             $ReferenceSysmon.EventFiltering."$EventFilteringProperty" = $Events
         }

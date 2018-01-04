@@ -44,7 +44,8 @@ ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function 
     #region Define byte to string mappings. This may change across verions.
     $SupportedSchemaVersions = @(
         [Version] '3.30.0.0',
-        [Version] '3.40.0.0'
+        [Version] '3.40.0.0',
+        [Version] '4.00.0.0'
     )
 
     $EventConditionMapping = @{
@@ -61,7 +62,7 @@ ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function 
 
     # The following value to string mappings were all pulled from
     # IDA and will require manual validation with with each new
-    # Sysmon ans schema version. Here's hoping they don't change often!
+    # Sysmon and schema version. Here's hoping they don't change often!
     $ProcessCreateMapping = @{
         0 = 'UtcTime'
         1 = 'ProcessGuid'
@@ -79,6 +80,29 @@ ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function 
         13 = 'ParentProcessId'
         14 = 'ParentImage'
         15 = 'ParentCommandLine'
+    }
+
+    $ProcessCreateMapping_4_00 = @{
+        0 = 'UtcTime'
+        1 = 'ProcessGuid'
+        2 = 'ProcessId'
+        3 = 'Image'
+        4 = 'FileVersion'
+        5 = 'Description'
+        6 = 'Product'
+        7 = 'Company'
+        8 = 'CommandLine'
+        9 = 'CurrentDirectory'
+        10 = 'User'
+        11 = 'LogonGuid'
+        12 = 'LogonId'
+        13 = 'TerminalSessionId'
+        14 = 'IntegrityLevel'
+        15 = 'Hashes'
+        16 = 'ParentProcessGuid'
+        17 = 'ParentProcessId'
+        18 = 'ParentImage'
+        19 = 'ParentCommandLine'
     }
 
     $FileCreateTimeMapping = @{
@@ -144,6 +168,22 @@ ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function 
         6 = 'Signed'
         7 = 'Signature'
         8 = 'SignatureStatus'
+    }
+
+    $ImageLoadMapping_4_00 = @{
+        0 = 'UtcTime'
+        1 = 'ProcessGuid'
+        2 = 'ProcessId'
+        3 = 'Image'
+        4 = 'ImageLoaded'
+        5 = 'FileVersion'
+        6 = 'Description'
+        7 = 'Product'
+        8 = 'Company'
+        9 = 'Hashes'
+        10 = 'Signed'
+        11 = 'Signature'
+        12 = 'SignatureStatus'
     }
 
     $CreateRemoteThreadMapping = @{
@@ -352,11 +392,25 @@ ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function 
 
     $SchemaVersion = New-Object -TypeName System.Version -ArgumentList $SchemaVersionMajor, $SchemaVersionMinor, 0, 0
 
+    Write-Verbose "Obtained the following schema version: $($SchemaVersion.ToString(2))"
+
     if (-not ($SupportedSchemaVersions -contains $SchemaVersion)) {
         $RuleReader.Dispose()
         $RuleMemoryStream.Dispose()
         throw "Unsupported schema version: $($SchemaVersion.ToString(2)). Schema version must be at least $($MinimumSupportedSchemaVersion.ToString(2))"
     }
+
+    #region Perform offset updates depending upon the schema version here
+    # This logic should be the first candidate for refactoring should the schema change drastically in the future.
+    switch ($SchemaVersion.ToString(2)) {
+        '4.0' {
+            Write-Verbose 'Using schema version 4.00 updated offsets.'
+            # ProcessCreate and ImageLoad values changed
+            $EventTypeMapping[1][1] = $ProcessCreateMapping_4_00
+            $EventTypeMapping[7][1] = $ImageLoadMapping_4_00
+        }
+    }
+    #endregion
 
     $null = $RuleReader.BaseStream.Seek($RuleGroupBeginOffset, 'Begin')
 
@@ -726,12 +780,14 @@ Outputs a Sysmon XML configuration document.
     # Compile the parsing code
     Add-Type -TypeDefinition $SchemaSource -ReferencedAssemblies 'System.Xml' -ErrorAction Stop
 
+    $NamespaceName = "Sysmon_$($SchemaVersion.Replace('.', '_'))"
+
     # Create a base "Sysmon" object. This serves as the root node that will eventually be serialized to XML.
-    $Sysmon = New-Object -TypeName Sysmon
+    $Sysmon = New-Object -TypeName "$NamespaceName.Sysmon"
 
     $Sysmon.schemaversion = $Configuration.SchemaVersion
 
-    if ($Configuration.CRLCheckingEnabled) { $Sysmon.CheckRevocation = New-Object -TypeName SysmonCheckRevocation }
+    if ($Configuration.CRLCheckingEnabled) { $Sysmon.CheckRevocation = New-Object -TypeName "$NamespaceName.SysmonCheckRevocation" }
 
     # The hashing algorithms need to be lower case in the XML config.
     $Sysmon.HashAlgorithms = ($Configuration.HashingAlgorithms | ForEach-Object { $_.ToLower() }) -join ','
@@ -754,7 +810,7 @@ Outputs a Sysmon XML configuration document.
 
     # A configuration can technically not have any EventFiltering rules.
     if ($EventGrouping) {
-        $Sysmon.EventFiltering = New-Object -TypeName SysmonEventFiltering
+        $Sysmon.EventFiltering = New-Object -TypeName "$NamespaceName.SysmonEventFiltering"
 
         foreach ($Event in $EventGrouping) {
             # The name of the event - e.g. ProcessCreate, FileCreate, etc.
@@ -780,7 +836,7 @@ Outputs a Sysmon XML configuration document.
 
             $Events = foreach ($RuleSet in $Event.Group) {
                 # The dynamic typing that follows relies upon naming consistency in the schema serialization source code.
-                $EventInstance = New-Object -TypeName "SysmonEventFiltering$EventName" -Property @{
+                $EventInstance = New-Object -TypeName "$NamespaceName.SysmonEventFiltering$EventName" -Property @{
                     onmatch = $RuleSet.OnMatch.ToLower()
                 }
 
@@ -789,7 +845,7 @@ Outputs a Sysmon XML configuration document.
                 foreach ($Rule in $RuleSet.Rules) {
                     $PropertyName = $Rule.RuleType
                     # Since each property can be of a unique type, resolve it accordingly.
-                    $PropertyTypeName = ("SysmonEventFiltering$EventName" -as [Type]).GetProperty($PropertyName).PropertyType.FullName.TrimEnd('[]')
+                    $PropertyTypeName = ("$NamespaceName.SysmonEventFiltering$EventName" -as [Type]).GetProperty($PropertyName).PropertyType.FullName.TrimEnd('[]')
 
                     if (-not $RuleDefs.ContainsKey($PropertyName)) {
                         $RuleDefs[$PropertyName] = New-Object -TypeName "Collections.ObjectModel.Collection``1[$PropertyTypeName]"
@@ -798,7 +854,9 @@ Outputs a Sysmon XML configuration document.
                     $RuleInstance = New-Object -TypeName $PropertyTypeName
                     # This needs to be lower case in the XML config.
                     $RuleInstance.condition = $Rule.Filter.ToLower()
-                    $RuleInstance.Value = $Rule.RuleText
+                    # An exception is thrown here if the value has a space and it is being cast to an enum type.
+                    # Currently, "Protected Process" is the only instance. I'll need to refactor this if more instances arise.
+                    if ($Rule.RuleText -eq 'Protected Process') { $RuleInstance.Value = 'ProtectedProcess' } else { $RuleInstance.Value = $Rule.RuleText }
 
                     $RuleDefs[$PropertyName].Add($RuleInstance)
                 }
@@ -832,7 +890,7 @@ Outputs a Sysmon XML configuration document.
 
         $XmlWriter = [Xml.XmlWriter]::Create($XMlStringBuilder, $XmlWriterSetting)
 
-        $XmlSerializer = New-Object -TypeName Xml.Serialization.XmlSerializer -ArgumentList ([Sysmon]), ''
+        $XmlSerializer = New-Object -TypeName Xml.Serialization.XmlSerializer -ArgumentList ("$NamespaceName.Sysmon" -as [Type]), ''
         # This will strip any additional "xmlns" attributes from the root Sysmon element.
         $EmptyNamespaces = New-Object -TypeName Xml.Serialization.XmlSerializerNamespaces
         $EmptyNamespaces.Add('', '')
