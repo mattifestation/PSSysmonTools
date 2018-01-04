@@ -1,0 +1,4 @@
+<!-- This policy is used primarily as a clean reference policy to merge others into. -->
+<Sysmon schemaversion="4.00">
+   <HashAlgorithms>*</HashAlgorithms>
+</Sysmon>
