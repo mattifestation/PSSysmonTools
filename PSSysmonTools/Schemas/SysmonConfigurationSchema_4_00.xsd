@@ -288,7 +288,7 @@
   <xs:element name="Sysmon">
     <xs:annotation>
       <xs:documentation>
-        Sysmon 3.4[0] schema
+        Sysmon 4.0[0] schema
       </xs:documentation>
     </xs:annotation>
     <xs:complexType>

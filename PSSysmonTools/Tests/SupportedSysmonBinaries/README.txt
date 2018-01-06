@@ -1,0 +1,1 @@
+The Sysmon binaries present in this directory are used for compatibility testing purposes. Each binary present in this directory implies that PSSysmonTools supports the schema versions they support as well as the binary format stored in the registry.
