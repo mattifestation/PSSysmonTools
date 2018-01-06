@@ -1,6 +1,6 @@
-<Sysmon schemaversion="3.40">
+<Sysmon schemaversion="4.0">
   <HashAlgorithms>sha1,md5</HashAlgorithms>
-  <ProcessAccessConfig>ProcessAccessConfig1:0xffffffff</ProcessAccessConfig>
+  <ProcessAccessConfig>ProcessAccessConfig1:0x11223344,ProcessAccessConfig2:0x44332211</ProcessAccessConfig>
   <CheckRevocation />
   <EventFiltering>
     <ProcessCreate onmatch="include">
@@ -31,6 +31,10 @@
       <Image condition="end with">Image7</Image>
       <Image condition="less than">Image8</Image>
       <Image condition="more than">Image9</Image>
+      <FileVersion>foo</FileVersion>
+      <Description condition="is not">foo</Description>
+      <Product condition="end with">foo</Product>
+      <Company condition="begin with">foo</Company>
       <CommandLine>CommandLine1</CommandLine>
       <CommandLine>CommandLine2</CommandLine>
       <CommandLine condition="is not">CommandLine3</CommandLine>
@@ -154,6 +158,10 @@
       <Image condition="end with">Image16</Image>
       <Image condition="less than">Image17</Image>
       <Image condition="more than">Image18</Image>
+      <FileVersion>foo</FileVersion>
+      <Description condition="is not">foo</Description>
+      <Product condition="end with">foo</Product>
+      <Company condition="begin with">foo</Company>
       <CommandLine condition="image">CommandLine10</CommandLine>
       <CommandLine>CommandLine11</CommandLine>
       <CommandLine condition="is not">CommandLine12</CommandLine>
@@ -806,6 +814,10 @@
       <ImageLoaded condition="end with">ImageLoaded7</ImageLoaded>
       <ImageLoaded condition="less than">ImageLoaded8</ImageLoaded>
       <ImageLoaded condition="more than">ImageLoaded9</ImageLoaded>
+      <FileVersion>foo</FileVersion>
+      <Description condition="is not">foo</Description>
+      <Product condition="end with">foo</Product>
+      <Company condition="begin with">foo</Company>
       <Hashes>Hashes1</Hashes>
       <Hashes>Hashes2</Hashes>
       <Hashes condition="is not">Hashes3</Hashes>
@@ -870,6 +882,10 @@
       <ImageLoaded condition="end with">ImageLoaded16</ImageLoaded>
       <ImageLoaded condition="less than">ImageLoaded17</ImageLoaded>
       <ImageLoaded condition="more than">ImageLoaded18</ImageLoaded>
+      <FileVersion>foo</FileVersion>
+      <Description condition="is not">foo</Description>
+      <Product condition="end with">foo</Product>
+      <Company condition="begin with">foo</Company>
       <Hashes condition="image">Hashes10</Hashes>
       <Hashes>Hashes11</Hashes>
       <Hashes condition="is not">Hashes12</Hashes>
