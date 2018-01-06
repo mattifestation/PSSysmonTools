@@ -707,7 +707,7 @@ Rule configuration (version {14}):
       $CRLCheckingString,
       ' - Process Access:',
       $ProcessAccessString,
-      $Rules.SchemaVersion.ToString(2),
+      "$($Rules.SchemaVersion.Major).$($Rules.SchemaVersion.Minor.ToString().PadRight(2, '0'))",
       ($AllRuleText | Out-String).TrimEnd("`r`n")
 
             $ConfigOutput
@@ -791,6 +791,9 @@ Outputs a Sysmon XML configuration document.
 
     # The hashing algorithms need to be lower case in the XML config.
     $Sysmon.HashAlgorithms = ($Configuration.HashingAlgorithms | ForEach-Object { $_.ToLower() }) -join ','
+
+    $ProcessAccessString = ($Configuration.ProcessAccess | ForEach-Object { "$($_.ProcessName):0x$($_.AccessMask.ToString('x'))" }) -join ','
+    if ($ProcessAccessString) { $Sysmon.ProcessAccessConfig = $ProcessAccessString }
 
     # Do not consider redundant event types. A well-formed binary Sysmon rule blob will have
     # identical RegistryEvent, PipeEvent, and WmiEvent rule entries as of config schema version 3.4[0]
