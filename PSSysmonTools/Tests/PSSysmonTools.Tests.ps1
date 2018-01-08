@@ -15,6 +15,7 @@ if (-not $IsRunningElevated) {
 $BinToSchemaVerMapping = @{
     '6.20' = '3.40'
     '7.00' = '4.0'
+    '7.01' = '4.0'
 }
 
 $SysmonBinPath = Join-Path -Path $ModuleRoot -ChildPath 'Tests\SupportedSysmonBinaries'
