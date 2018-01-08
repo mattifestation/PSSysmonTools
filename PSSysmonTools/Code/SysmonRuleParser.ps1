@@ -24,15 +24,16 @@ ConvertFrom-SysmonBinaryConfiguration -RuleBytes $RuleBytes
 
 .OUTPUTS
 
-Sysmon.EventGroup
+Sysmon.EventCollection
 
-Outputs one or more groupings of Sysmon rules.
+Output a fully-parsed rule object including the hash of the rules blob.
 
 .NOTES
 
 ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function for Get-SysmonConfiguration.
 #>
 
+    [OutputType('Sysmon.EventCollection')]
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $True)]

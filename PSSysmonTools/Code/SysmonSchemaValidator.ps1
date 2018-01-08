@@ -30,6 +30,7 @@ Sysmon.XMLValidationResult
 Outputs an object consisting of the results of the schema validation.
 #>
 
+    [OutputType('Sysmon.XMLValidationResult')]
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $True, ValueFromPipelineByPropertyName = $True)]
