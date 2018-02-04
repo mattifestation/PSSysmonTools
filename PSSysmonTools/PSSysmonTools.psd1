@@ -32,6 +32,11 @@ PrivateData = @{
         ProjectUri = 'https://github.com/mattifestation/PSSysmonTools'
 
         ReleaseNotes = @'
+0.2.3
+-----
+Bug fixes:
+* Uppercase hash algorithms are supported. Thanks, Carlos Perez!
+
 0.2.2
 -----
 Enhancements:

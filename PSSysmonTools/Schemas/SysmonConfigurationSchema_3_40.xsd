@@ -140,7 +140,7 @@
     <xs:restriction base="xs:string">
       <!-- Note that this will allow duplicates in the comma-separate list. e.g. "sha1,sha-1,md5" -->
       <!-- I don't believe XSD pattern regexes are expressive enough to account for unique values. This is better than nothing though. -->
-      <xs:pattern value="(\*|all)|((sha1|sha-1|md5|md-5|sha256|sha-256|imphash|imp-hash)(,(sha1|sha-1|md5|md-5|sha256|sha-256|imphash|imp-hash))*)"/>
+      <xs:pattern value="(\*|(all|ALL))|(((sha1|SHA1)|(sha-1|SHA-1)|(md5|MD5)|(md-5|MD-5)|(sha256|SHA256)|(sha-256|SHA-256)|(imphash|IMPHASH)|(imp-hash|IMP-HASH))(,((sha1|SHA1)|(sha-1|SHA-1)|(md5|MD5)|(md-5|MD-5)|(sha256|SHA256)|(sha-256|SHA-256)|(imphash|IMPHASH)|(imp-hash|IMP-HASH)))*)"/>
     </xs:restriction>
   </xs:simpleType>
 

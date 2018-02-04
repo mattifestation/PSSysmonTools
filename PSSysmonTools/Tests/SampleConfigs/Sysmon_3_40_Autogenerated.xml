@@ -1,5 +1,5 @@
 <Sysmon schemaversion="3.40">
-  <HashAlgorithms>sha1,md5</HashAlgorithms>
+  <HashAlgorithms>sha1,MD5,imp-hash</HashAlgorithms>
   <ProcessAccessConfig>ProcessAccessConfig1:0xffffffff</ProcessAccessConfig>
   <CheckRevocation />
   <EventFiltering>

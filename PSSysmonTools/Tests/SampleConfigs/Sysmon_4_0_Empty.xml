@@ -1,4 +1,4 @@
 <!-- This policy is used primarily as a clean reference policy to merge others into. -->
 <Sysmon schemaversion="4.00">
-   <HashAlgorithms>md5,sha1</HashAlgorithms>
+   <HashAlgorithms>md5,SHA1</HashAlgorithms>
 </Sysmon>
