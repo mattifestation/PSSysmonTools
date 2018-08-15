@@ -79,6 +79,15 @@ Outputs an object consisting of the results of the schema validation.
                     $SchemaVersion = '4.00'
                 }
 
+                '4.1' {
+                    $XSDPath = "$Script:ModuleBase\Schemas\SysmonConfigurationSchema_4_10.xsd"
+                    $SchemaVersion = '4.10'
+                }
+
+                '4.10' {
+                    $XSDPath = "$Script:ModuleBase\Schemas\SysmonConfigurationSchema_4_10.xsd"
+                }
+
                 default {
                     Write-Error "Schema version $SchemaVersion is not supported."
                     return
@@ -100,11 +109,11 @@ Outputs an object consisting of the results of the schema validation.
             $XMLSettings.IgnoreWhitespace = $True
             $XMLSettings.NameTable = New-Object -TypeName Xml.NameTable
             $XMLNamespaceManager = New-Object -TypeName Xml.XmlNamespaceManager -ArgumentList $XMLSettings.NameTable
-            
+
             # Since the namespace is not supplied in a Sysmon config, it needs to be specified here.
             $XMLNamespaceManager.AddNamespace([String]::Empty, $SysmonConfigNamespace)
             $XMLParserContext = New-Object -TypeName Xml.XmlParserContext -ArgumentList $XMLSettings.NameTable, $XMLNamespaceManager, $null, ([Xml.XmlSpace]::Default)
-            
+
             $XMLSettings.ValidationType = [Xml.ValidationType]::Schema
             $null = $XMLSettings.Schemas.Add($SysmonConfigNamespace, $XSDPath)
             $XMLSettings.ValidationFlags = $XMLSettings.ValidationFlags -bor [Xml.Schema.XmlSchemaValidationFlags]::ReportValidationWarnings
