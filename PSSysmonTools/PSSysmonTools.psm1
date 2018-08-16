@@ -4,5 +4,6 @@ Set-Variable -Name ModuleBase -Option Constant -Scope Script -Value $PSScriptRoo
 Set-Variable -Name SupportedSchemaVersions -Option Constant -Scope Script -Value @(
     '3.40',
     '4.0',
-    '4.1'
+    '4.1',
+    '4.10'
 )
