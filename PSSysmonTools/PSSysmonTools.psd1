@@ -32,6 +32,12 @@ PrivateData = @{
         ProjectUri = 'https://github.com/mattifestation/PSSysmonTools'
 
         ReleaseNotes = @'
+
+0.2.4
+-----
+Enhancements:
+* Added schemaversion 4.1 by Olaf Hartong
+
 0.2.3
 -----
 Bug fixes:

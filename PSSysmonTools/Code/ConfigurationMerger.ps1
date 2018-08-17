@@ -84,12 +84,13 @@ Outputs a String consisting of the merged policy.
         #  non-injectible source code was supplied to Add-Type, however. $ConfigurationSchemaSource variables should always be
         #  constant variables with script (i.e. module) scope.
         $SchemaSource = Get-Variable -Name "SysmonConfigSchemaSource_$($ReferencePolicyValidationResult.SchemaVersion.Replace('.', '_'))" -Scope Script -ValueOnly
-    
+
         # Compile the parsing code
         Add-Type -TypeDefinition $SchemaSource -ReferencedAssemblies 'System.Xml' -ErrorAction Stop
 
         $NamespaceName = "Sysmon_$($ReferencePolicyValidationResult.SchemaVersion.Replace('.', '_'))"
-
+        Write-Verbose $ReferencePolicyValidationResult.SchemaVersion
+        Write-Verbose $NamespaceName
         # This will be used to deserialize all of the XML configs and to serialize the merged config.
         $XmlSerializer = New-Object -TypeName Xml.Serialization.XmlSerializer -ArgumentList ("$NamespaceName.Sysmon" -as [Type]), ''
 
@@ -189,7 +190,7 @@ Outputs a String consisting of the merged policy.
 
             # Ensure the event groups are typed properly.
             $Events = $Events -as "$NamespaceName.SysmonEventFiltering$EventFilteringProperty[]"
-            
+
             $ReferenceSysmon.EventFiltering."$EventFilteringProperty" = $Events
         }
 

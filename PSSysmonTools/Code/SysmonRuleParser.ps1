@@ -46,7 +46,8 @@ ConvertFrom-SysmonBinaryConfiguration is designed to serve as a helper function 
     $SupportedSchemaVersions = @(
         [Version] '3.30.0.0',
         [Version] '3.40.0.0',
-        [Version] '4.00.0.0'
+        [Version] '4.00.0.0',
+        [Version] '4.10.0.0'
     )
 
     $EventConditionMapping = @{
@@ -485,7 +486,7 @@ Parses a Sysmon driver configuration from the registry. Output is nearly identic
 
 .DESCRIPTION
 
-Get-SysmonConfiguration parses a Sysmon configuration from the registry without the need to run "sysmon.exe -c". This function is designed to enable Sysmon configuration auditing at scale as well as reconnaissance for red teamers. 
+Get-SysmonConfiguration parses a Sysmon configuration from the registry without the need to run "sysmon.exe -c". This function is designed to enable Sysmon configuration auditing at scale as well as reconnaissance for red teamers.
 
 Get-SysmonConfiguration has been tested with the following Sysmon versions: 6.20
 
@@ -639,7 +640,7 @@ Get-SysmonConfiguration will have to be manually validated for each new Sysmon a
         if ($ProcessAccessList.Count -eq 0) { $Properties.Remove('ProcessAccess') }
 
         if ($MatchExeOutput) {
-        
+
             $NetworkConnectionString = if ($NetworkConnection) { 'enabled' } else { 'disabled' }
             $ImageLoadingString = if ($ImageLoading) { 'enabled' } else { 'disabled' }
             $CRLCheckingString = if ($CRLChecking) { 'enabled' } else { 'disabled' }
@@ -777,7 +778,7 @@ Outputs a Sysmon XML configuration document.
     #  non-injectible source code was supplied to Add-Type, however. $ConfigurationSchemaSource variables should always be
     #  constant variables with script (i.e. module) scope.
     $SchemaSource = Get-Variable -Name "SysmonConfigSchemaSource_$($SchemaVersion.Replace('.', '_'))" -Scope Script -ValueOnly
-    
+
     # Compile the parsing code
     Add-Type -TypeDefinition $SchemaSource -ReferencedAssemblies 'System.Xml' -ErrorAction Stop
 
